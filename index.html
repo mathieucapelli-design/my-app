@@ -2,72 +2,115 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Simulateur V1.2</title>
+<title>Simulateur</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial;
-    background: #121212;
-    color: white;
-    padding: 20px;
+    background:#121212;
+    color:white;
+    padding:15px;
 }
 
 .container {
-    max-width: 420px;
-    margin: auto;
+    max-width:420px;
+    margin:auto;
 }
 
 h1 {
-    text-align: center;
-    color: #00bfff;
-    margin-bottom: 30px;
+    text-align:center;
+    color:#00bfff;
+    margin-bottom:25px;
 }
 
+/* CARTES */
+.card {
+    background:#1e1e1e;
+    padding:16px;
+    border-radius:14px;
+    margin-bottom:18px;
+}
+
+/* TITRES */
+.section-title {
+    font-size:15px;
+    color:#00bfff;
+    margin-bottom:12px;
+}
+
+/* CHAMPS */
 .field {
-    margin-bottom: 18px;
+    margin-bottom:14px;
 }
 
 label {
-    display: block;
-    margin-bottom: 5px;
-    color: #ccc;
+    font-size:13px;
+    color:#aaa;
+    margin-bottom:5px;
+    display:block;
 }
 
-input {
+input, select {
     width: 100%;
-    padding: 14px;
-    font-size: 18px;
-    border-radius: 10px;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
     border: none;
-    background: #1e1e1e;
+    background: #2a2a2a;
     color: white;
+    box-sizing: border-box; /* sécurité */
 }
 
-.desc {
-    font-size: 13px;
-    color: #888;
-    margin-top: 4px;
+.container {
+    padding: 0 5px;
 }
 
+/* BOUTON */
 button {
-    width: 100%;
-    padding: 16px;
-    font-size: 20px;
-    background: #00aaff;
-    border: none;
-    border-radius: 12px;
-    color: white;
-    margin-top: 10px;
+    width:100%;
+    padding:16px;
+    font-size:18px;
+    background:#00aaff;
+    border:none;
+    border-radius:12px;
+    color:white;
+    margin-top:10px;
 }
 
+/* RESULTAT */
 .result {
-    margin: 25px 0 30px 0;
-    padding: 15px;
-    background: #1e1e1e;
-    border-radius: 10px;
-    font-size: 22px;
-    text-align: center;
+    background:#00aaff;
+    padding:18px;
+    border-radius:14px;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+    margin-bottom:18px;
+}
+
+.result small {
+    display:block;
+    font-size:15px;
+    margin-top:10px;
+    font-weight:normal;
+}
+
+/* MONTAGES */
+.montage-item {
+    background:#2a2a2a;
+    padding:10px;
+    border-radius:10px;
+    margin-bottom:10px;
+}
+
+.montage-item input {
+    margin-bottom:6px;
 }
 </style>
 </head>
@@ -76,87 +119,164 @@ button {
 
 <div class="container">
 
-<h1>⚙️ Simulateur </h1>
+<h1>⚙️ Simulateur v2.5 </h1>
+
+<!-- ENTREE -->
+<div class="card">
+<div class="section-title">Entrée pièce</div>
 
 <div class="field">
-    <label>Surface (dm²)</label>
-    <input id="surface" type="number" step="0.01" inputmode="decimal">
+<label>Surface (dm²)</label>
+<input id="surface" type="number" step="0.01" inputmode="decimal">
 </div>
 
 <div class="field">
-    <label>Épaisseur (µm)</label>
-    <input id="epaisseur" type="number" step="0.1" inputmode="decimal">
+<label>Épaisseur MAX (µm)</label>
+<input id="epaisseurMax" type="number" step="0.1" inputmode="decimal">
+</div>
+
+<div class="field">
+<label>Géométrie</label>
+<select id="facteur">
+    <option value="1">Simple</option>
+    <option value="1.1">Moyenne</option>
+    <option value="1.25">Complexe</option>
+    <option value="1.4">Critique</option>
+</select>
+</div>
+
+<div class="field">
+<label>Montage</label>
+<select id="montageSelect"></select>
 </div>
 
 <button id="btnCalc">Calculer</button>
+</div>
 
-<div class="result" id="result"></div>
+<!-- RESULTAT -->
+<div class="result" id="result">
+Résultat affiché ici
+</div>
+
+<!-- PARAMETRES -->
+<div class="card">
+<div class="section-title">Paramètres</div>
 
 <div class="field">
-    <label>Densité cible (A/dm²)</label>
-    <input id="densite" type="number" step="0.1" inputmode="decimal">
-    <div class="desc">Sauvegardé automatiquement</div>
+<label>Densité (A/dm²)</label>
+<input id="densite" type="number" inputmode="decimal">
 </div>
 
 <div class="field">
-    <label>Vitesse dépôt (µm/min)</label>
-    <input id="vitesse" type="number" step="0.01" inputmode="decimal">
-    <div class="desc">Sauvegardé automatiquement</div>
+<label>Vitesse (µm/min)</label>
+<input id="vitesse" type="number" inputmode="decimal">
+</div>
+</div>
+
+<!-- MONTAGES -->
+<div class="card">
+<div class="section-title">Montages</div>
+<div id="montages"></div>
 </div>
 
 </div>
 
 <script>
 
-// Chargement des paramètres
-function charger() {
-    document.getElementById("densite").value =
-        localStorage.getItem("densite") || 4;
+let montages = [];
 
-    document.getElementById("vitesse").value =
-        localStorage.getItem("vitesse") || 1.15;
+// INIT MONTAGES
+function initMontages() {
+    for (let i=0;i<4;i++) {
+        let nom = localStorage.getItem("m_nom_"+i) || "Montage "+(i+1);
+        let I = localStorage.getItem("m_I_"+i) || 0;
+        montages.push({nom, I:parseFloat(I)});
+    }
 }
 
-// Sauvegarde automatique
-function sauvegarder() {
-    localStorage.setItem("densite",
-        document.getElementById("densite").value);
+// AFFICHAGE MONTAGES
+function afficherMontages() {
 
-    localStorage.setItem("vitesse",
-        document.getElementById("vitesse").value);
+    let div = document.getElementById("montages");
+    div.innerHTML = "";
+
+    montages.forEach((m,i)=>{
+        div.innerHTML += `
+        <div class="montage-item">
+            <input value="${m.nom}" onchange="saveNom(${i},this.value)">
+            <input type="number" value="${m.I}" onchange="saveI(${i},this.value)" placeholder="Courant (A)">
+        </div>`;
+    });
+
+    let sel = document.getElementById("montageSelect");
+    sel.innerHTML = "";
+
+    montages.forEach((m,i)=>{
+        sel.innerHTML += `<option value="${i}">${m.nom}</option>`;
+    });
 }
 
-// Calcul
-function calcul() {
+// SAUVEGARDE
+function saveNom(i,v){
+    montages[i].nom = v;
+    localStorage.setItem("m_nom_"+i,v);
+    afficherMontages();
+}
 
-    let S = parseFloat(document.getElementById("surface").value);
-    let e = parseFloat(document.getElementById("epaisseur").value);
-    let J = parseFloat(document.getElementById("densite").value);
-    let V = parseFloat(document.getElementById("vitesse").value);
+function saveI(i,v){
+    montages[i].I = parseFloat(v);
+    localStorage.setItem("m_I_"+i,v);
+}
 
-    if (!S || !e || !J || !V) {
-        document.getElementById("result").innerHTML = "⚠️ Remplis les champs";
+function charger(){
+    densite.value = localStorage.getItem("densite") || 4;
+    vitesse.value = localStorage.getItem("vitesse") || 1.15;
+}
+
+function saveParams(){
+    localStorage.setItem("densite",densite.value);
+    localStorage.setItem("vitesse",vitesse.value);
+}
+
+// CALCUL
+function calcul(){
+
+    let S = parseFloat(surface.value);
+    let eMax = parseFloat(epaisseurMax.value);
+    let C = parseFloat(facteur.value);
+    let J = parseFloat(densite.value);
+    let V = parseFloat(vitesse.value);
+
+    let idx = montageSelect.value;
+    let I_montage = montages[idx].I;
+
+    if(!S || !eMax || !J || !V){
+        result.innerHTML = "⚠️ Remplis les champs";
         return;
     }
 
-    let I = J * S;
-
-    let t_min = e / V;
+    let eMoy = eMax / C;
+    let t_min = eMoy / V;
     let t_sec = t_min * 60;
 
-    document.getElementById("result").innerHTML =
-        "🔌 Courant : <b>" + I.toFixed(2) + " A</b><br>" +
-        "⏱ Temps : <b>" + t_sec.toFixed(0) + " sec</b> (" + t_min.toFixed(1) + " min)";
+    let I_total = (J * S) + I_montage;
+
+    result.innerHTML =
+        "⏱ " + t_sec.toFixed(0) + " sec" +
+        "<small>" +
+        "Épaisseur moy : "+eMoy.toFixed(2)+" µm<br>" +
+        "Courant total : "+I_total.toFixed(2)+" A" +
+        "</small>";
 }
 
-// Events
-document.getElementById("btnCalc").addEventListener("click", calcul);
-
-document.getElementById("densite").addEventListener("input", sauvegarder);
-document.getElementById("vitesse").addEventListener("input", sauvegarder);
-
-// Init
+// INIT
+initMontages();
+afficherMontages();
 charger();
+
+btnCalc.addEventListener("click", calcul);
+densite.addEventListener("input", saveParams);
+vitesse.addEventListener("input", saveParams);
 
 </script>
 
